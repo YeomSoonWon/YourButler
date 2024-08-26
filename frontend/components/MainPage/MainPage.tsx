@@ -5,11 +5,16 @@ import Image from "next/image";
 
 export const ContainerDiv = styled.main`
   margin: 0;
+
+  ::selection {
+    background-color: #afffe3;
+  }
 `;
 
 export const UpperDiv = styled.div`
   height: 40rem;
   position: relative;
+  -webkit-user-select: none;
 `;
 
 export const FirstP = styled.p`
@@ -176,6 +181,7 @@ export const ListContainerDiv = styled.div`
   align-items: center;
   background-color: white;
   padding: 1rem;
+  border-radius: 0.4rem;
 `;
 
 export const ListAboutDiv = styled.div`
@@ -214,7 +220,7 @@ export const SearchBtn = styled.button`
   border: none;
   position: relative;
   right: -18.7rem;
-  top: -2.4rem;
+  top: -2.6rem;
   cursor: pointer;
   background-color: white;
 `;

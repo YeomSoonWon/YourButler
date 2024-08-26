@@ -5,7 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import authApi from "@/api/authApi";
 
 const authOptions : NextAuthOptions = {
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.SECRET,
     providers: [
         NaverProvider({
           clientId: process.env.NAVER_ID || "",
@@ -31,11 +31,6 @@ const authOptions : NextAuthOptions = {
             status : res.status,
             accessToken : res.data.token.accessToken
           };
-          
-          if(res.status === 202){
-          // return `http://localhost:3000/create`;
-          }
-
           return true;
         },
 
@@ -54,7 +49,6 @@ const authOptions : NextAuthOptions = {
           },
 
         async session({ session, user, token }) {
-          console.log("session callback called");
           // @ts-ignore
           session = token;
           return session

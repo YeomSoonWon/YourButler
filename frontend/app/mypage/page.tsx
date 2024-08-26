@@ -11,80 +11,96 @@ import ItemEach from "@/components/List/ItemEach";
 import Button from "@/components/Button/Button";
 import Link from "next/link";
 import Chatting from "@/components/Chat/Chatting";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useEffect } from "react";
 import authApi from "@/api/authApi";
+import { IBM_Plex_Sans_KR } from "next/font/google";
+import realEstateApi from "@/api/realEstateApi";
+import chatApi from "@/api/chatApi";
+
+const ibmPlexSansKR = IBM_Plex_Sans_KR({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+});
 
 const Profile = () => {
   const [selectedTitleIndex, setSelectedTitleIndex] = useState(0);
-  const {data:session, status}  = useSession();
+  const { data: session, status } = useSession();
   const [user, setUser] = useState(null);
+  const [bookMarkes, setBookMarkes] = useState([]);
+  const [myChats, setMyChats] = useState([]);
 
-  useEffect(()=>{
-    if(session){
+  useEffect(() => {
+    if (session) {
       // @ts-ignore
       configureUser(session?.userData.token, session?.userData.socialType);
     }
+  }, [session]);
 
-  },[session]);
-
-  useEffect(()=>{
-    if(status === "unauthenticated"){
-      alert("잘못된 접근입니다.")
-      window.location.href="/";
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      alert("잘못된 접근입니다.");
+      window.location.href = "/";
     }
-  },[status]);
+  }, [status]);
 
-  const configureUser=async(token:String, provider:String)=>{
-    try{
+  useEffect(() => {
+    if (user) {
+      getLikes();
+      getAllChats();
+    }
+  }, [user]);
+
+  const configureUser = async (token: String, provider: String) => {
+    try {
       let res = await authApi.getUser(token, provider);
-      if(res.status === 200){
-        console.log(res.data);
+      if (res.status === 200) {
         setUser(res.data.memberResponse);
-      }else{
+      } else {
         alert("비정상적인 접근입니다.");
-        window.location.href="/";
+        window.location.href = "/";
       }
-    }catch{
+    } catch {
       alert("비정상적인 접근입니다.");
-      window.location.href="/";
+      window.location.href = "/";
     }
+  };
+
+  const getAllChats = async () => {
+    // @ts-ignore
+    let res = await chatApi.getMyAllChats(session?.userData);
+    setMyChats(res.data);
+  }
+
+  const getLikes = async () => {
+    // @ts-ignore
+    let res = await realEstateApi.getLikes(session?.userData);
+    setBookMarkes(res.data.boomarkList);
   }
 
   const handleTitleClick = (index) => {
     setSelectedTitleIndex(index);
-    // todo : selectedTitleIndex의 값을 통해 유저의 채팅 목록 중 매물에 맞는 채팅 출력
   };
 
-  const deleteUser = async()=>{
+  const deleteUser = async () => {
     let realDelete = window.confirm("정말 탈퇴하시겠습니까?");
-    if(realDelete){
+    if (realDelete) {
       // @ts-ignore
       let res = await authApi.deleteUser(session?.userData);
-      if(res.data.message === "탈퇴 완료"){
+      if (res.data === "회원탈퇴 완료") {
         alert("탈퇴되었습니다.");
-        window.location.href="/";
+        // window.location.href="/";
+        signOut();
+      } else {
+        alert("오류가 발생했습니다.");
       }
     }
-  }
-
-  const chatMessages = [
-    { text: "당신의집사 챗봇입니다. 무엇을 도와드릴까요?", isRight: false },
-    { text: "당신의집사 챗봇입니다. 무엇을 도와드릴까요?", isRight: false },
-    { text: "어쩌고 .. 저쩌고...", isRight: true },
-    { text: "어쩌고 .. 저쩌고...", isRight: true },
-    { text: "어쩌고 .. 저쩌고...", isRight: true },
-    { text: "어쩌고 .. 저쩌고...", isRight: true },
-    {
-      text: "당신의집사 챗봇입니다. 무엇을 도와드릴까요?ssssssssssssssssssssssss",
-      isRight: false,
-    },
-  ];
+  };
 
   return (
     <main>
-      <AppBar backgroundColor="transparent" color="#334835" user={user} />
-      <Container>
+      <AppBar backgroundColor="transparent" logo="greenlogo" color="#334835" user={user} />
+      <Container className={ibmPlexSansKR.className}>
         <TitleDiv>
           <NameP>{user?.nickname}님,</NameP>
           <p>당신의집사 마이페이지에 오신 것을 환영합니다.</p>
@@ -96,7 +112,7 @@ const Profile = () => {
             <UserInfoEach title="나이" value={user?.age} />
             <UserInfoEach title="주택 수" value={user?.numberOfHouses} />
             <UserInfoEach title="부동산 거래 예산" value={user?.holdingAsset} />
-            <UserInfoEach title="월 가용자산" value={user?.monthlyAvailableAsset} />
+            <UserInfoEach title="월세 가용자산" value={user?.monthlyAvailableAsset} />
             <UserInfoEach title="신용도" value={user?.creditRating} />
             <BtnDiv>
               <Link href="/modify">
@@ -114,45 +130,25 @@ const Profile = () => {
               <BoldP>상담 내역</BoldP>
               <ChatListDiv>
                 <ChatTitleDiv>
-                  <ChatTitleEach
-                    title="송파아이파크 107동 · 중층"
-                    isSelected={selectedTitleIndex === 0}
-                    onClick={() => handleTitleClick(0)}
-                  />
-                  <ChatTitleEach
-                    title="반포롯데캐슬오스카 1동 고층"
-                    isSelected={selectedTitleIndex === 1}
-                    onClick={() => handleTitleClick(1)}
-                  />
-                  <ChatTitleEach
-                    title="더샵반포리버파크(도시형) 3동 저층"
-                    isSelected={selectedTitleIndex === 2}
-                    onClick={() => handleTitleClick(2)}
-                  />
-                  <ChatTitleEach
-                    title="반포센트럴자이 107동 7층 아파트"
-                    isSelected={selectedTitleIndex === 3}
-                    onClick={() => handleTitleClick(3)}
-                  />
-                  <ChatTitleEach
-                    title="아크로리버뷰신반포 103동 7층"
-                    isSelected={selectedTitleIndex === 4}
-                    onClick={() => handleTitleClick(4)}
-                  />
+                  {myChats && myChats.map((item, index) => {
+                    return <ChatTitleEach
+                      title={item?.buildingName}
+                      isSelected={selectedTitleIndex === index}
+                      onClick={() => handleTitleClick(index)}
+                    />
+                  })}
                 </ChatTitleDiv>
                 <ChatDiv>
-                  <Chatting messages={chatMessages} />
+                  <Chatting messages={myChats[selectedTitleIndex]?.messageList} />
                 </ChatDiv>
               </ChatListDiv>
             </RightUpperDiv>
             <LeftUpperDiv>
               <BoldP>찜한 매물</BoldP>
               <LikeListDiv>
-                <ItemEach height="17rem" width="15rem" />
-                <ItemEach height="17rem" width="15rem" />
-                <ItemEach height="17rem" width="15rem" />
-                <ItemEach height="17rem" width="15rem" />
-                <ItemEach height="17rem" width="15rem" />
+                {bookMarkes && bookMarkes.map((item, index) => {
+                  return <ItemEach height="15rem" width="13rem" item={item} holdingAsset={user?.holdingAsset} />
+                })}
               </LikeListDiv>
             </LeftUpperDiv>
           </RightDiv>
@@ -174,6 +170,10 @@ const Container = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  ::selection {
+    background-color: #afffe3;
   }
 `;
 

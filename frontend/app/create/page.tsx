@@ -8,94 +8,96 @@ import { useSession } from "next-auth/react";
 import React from "react";
 import { useEffect, useState } from "react";
 import authApi from "@/api/authApi";
+import { IBM_Plex_Sans_KR } from "@next/font/google";
+
+const ibmPlexSansKR = IBM_Plex_Sans_KR({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+});
 
 const Create = () => {
-  const {data:session, status}  = useSession();
+  const { data: session, status } = useSession();
   const [age, setAge] = useState<Number | null>(null);
   const [houses, setHouses] = useState<string | null>(null);
   const [budget, setBudget] = useState<Number | null>(null);
   const [jasan, setJasan] = useState<Number | null>(null);
   const [credit, setCredit] = useState<Number | null>(null);
 
-  const handleAge = (e:React.ChangeEvent<HTMLInputElement>) => {
-    console.log("age : ", e.target.value);
+  const handleAge = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAge(parseInt(e.target.value));
-  }
+  };
 
-  const handleHouses = (e:React.ChangeEvent<HTMLSelectElement>) => {
-    console.log("houses : ", e.target.value);
+  const handleHouses = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setHouses(e.target.value);
-  }
+  };
 
-  const handleBudget = (e:React.ChangeEvent<HTMLInputElement>) => {
-    console.log("budget : ", e.target.value);
+  const handleBudget = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBudget(parseInt(e.target.value));
-  }
+  };
 
-  const handleJasan = (e:React.ChangeEvent<HTMLInputElement>) => {
-    console.log("jasan : ", e.target.value);
+  const handleJasan = (e: React.ChangeEvent<HTMLInputElement>) => {
     setJasan(parseInt(e.target.value));
-  }
+  };
 
-  const handleCredit = (e:React.ChangeEvent<HTMLInputElement>) => {
-    console.log("credit : ", e.target.value);
+  const handleCredit = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCredit(parseInt(e.target.value));
-  }
+  };
 
-  const createUser = async (userData:any | null) =>{
-    if( !age || !houses ||!budget){
+  const createUser = async (userData: any | null) => {
+    if (!age || !houses || !budget) {
       alert("나이, 주택 수, 예산은 필수입니다.");
       return;
     }
-    let res = await authApi.signUp(userData, age, houses, budget, jasan, credit );
-    if(res.status === 200){
+    let res = await authApi.signUp(userData, age, houses, budget, jasan, credit);
+    if (res.status === 200) {
       alert("회원가입 완료");
-      window.location.href="/";
+      window.location.href = "/";
     }
-  }
+  };
 
   useEffect(() => {
-    console.log(status);
-    if((status === "unauthenticated")){
+    if (status === "unauthenticated") {
       alert("잘못된 접근입니다.");
-      window.location.href="/";
+      window.location.href = "/";
     }
   }, [status]);
 
-  useEffect(()=>{
-    // @ts-ignore
-    console.log(session?.userData);
-    if(session){
-          // @ts-ignore
-        configureUser(session?.userData.token, session?.userData.socialType);
-      }
-    },[session]);
-
-  const configureUser=async(token:String, provider:String)=>{
-    try{
-      let res = await authApi.getUser(token, provider);
-      if(res.status === 200){
-        alert("이미 존재하는 회원입니다.");
-        window.location.href="/";
-      }
-    }catch{
-      alert("비정상적인 접근입니다.");
-      window.location.href="/";
+  useEffect(() => {
+    if (session) {
+      // @ts-ignore
+      configureUser(session?.userData.token, session?.userData.socialType);
     }
-  }
+  }, [session]);
+
+  const configureUser = async (token: String, provider: String) => {
+    try {
+      let res = await authApi.getUser(token, provider);
+      if (res.status === 200) {
+        alert("이미 존재하는 회원입니다.");
+        window.location.href = "/";
+      }
+    } catch {
+      alert("비정상적인 접근입니다.");
+      window.location.href = "/";
+    }
+  };
 
   return (
     <Container>
-      <AppBar backgroundColor="transparent" color="#334835" user={null} logoLogout={true}/>
-      <CenterDiv>
+      <AppBar
+        backgroundColor="transparent"
+        logo="greenlogo"
+        color="#334835"
+        user={null}
+        logoLogout={true}
+      />
+      <CenterDiv className={ibmPlexSansKR.className}>
         <MiddleDiv>
           <TitleDiv>
             <TitleP>추가 정보 입력</TitleP>
             <SubDiv>
               <SubP>당신의 집사에 오신 것을 환영합니다!</SubP>
-              <SubP>
-                더 정확한 추천을 위해 최대한 많은 정보를 입력해주세요 :)
-              </SubP>
+              <SubP>더 정확한 추천을 위해 최대한 많은 정보를 입력해주세요 :)</SubP>
             </SubDiv>
           </TitleDiv>
           <InputDiv>
@@ -103,24 +105,30 @@ const Create = () => {
             <StyledInput
               type="number"
               placeholder="나이"
-              onChange={(e)=>{handleAge(e)}}
+              onChange={(e) => {
+                handleAge(e);
+              }}
               required
             />
             <StyledSelect
-              onChange={(e)=>{handleHouses(e)}}
+              onChange={(e) => {
+                handleHouses(e);
+              }}
               required
-              >
+            >
               <option value="">-- 주택 수를 선택하세요 --</option>
               <option value="none">무주택</option>
               <option value="one">1주택</option>
               <option value="two">2주택</option>
-              <option value="more">3주택 이상</option>
+              <option value="more_than_two">3주택 이상</option>
             </StyledSelect>
             <StyledInput
               type="number"
-              onChange={(e)=>{handleBudget(e)}}
+              onChange={(e) => {
+                handleBudget(e);
+              }}
               required
-              placeholder="부동산 거래 예산"
+              placeholder="부동산 거래 예산(단위:만원, ~1000억)"
             />
             <SubTitleP>
               <InputTitleP>선택</InputTitleP>
@@ -128,19 +136,27 @@ const Create = () => {
             </SubTitleP>
             <StyledInput
               type="number"
-              placeholder="월 가용자산"
-              onChange={(e)=>{handleJasan(e)}}
-              />
+              placeholder="월 가용자산(단위:만원, ~100억)"
+              onChange={(e) => {
+                handleJasan(e);
+              }}
+            />
             <StyledInput
               type="number"
-              placeholder="신용도"
-              onChange={(e)=>{handleCredit(e)}}
-              />
+              placeholder="신용도(~1000)"
+              onChange={(e) => {
+                handleCredit(e);
+              }}
+            />
           </InputDiv>
-          <YellowBtn onClick={()=>{
-            // @ts-ignore
-            createUser(session?.userData)
-            }}>완료</YellowBtn>
+          <YellowBtn
+            onClick={() => {
+              // @ts-ignore
+              createUser(session?.userData);
+            }}
+          >
+            완료
+          </YellowBtn>
         </MiddleDiv>
       </CenterDiv>
       <Footer />
@@ -152,6 +168,10 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   flex-direction: column;
+
+  ::selection {
+    background-color: #afffe3;
+  }
 `;
 
 const MiddleDiv = styled.div`
